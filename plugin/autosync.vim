@@ -7,7 +7,7 @@ let s:required = [
 \ 'g:autosync_local_base_path',
 \ 'g:autosync_remote_base_path',
 \ 'g:autosync_remote_host',
-\ 'g:autosync_exclude_opt',
+\ 'g:autosync_exclude_opts',
 \ ]
 
 for v in s:required
@@ -20,8 +20,10 @@ endfor
 let s:rsync = '/usr/bin/rsync'
 let s:local_base_path = g:autosync_local_base_path
 let s:remote_base_path = g:autosync_remote_base_path
+" Recommend: Host alias of your ssh config (~/.ssh/config)
 let s:remote_host = g:autosync_remote_host
-let s:exclude_opt = g:autosync_exclude_opt
+let s:exclude_opt = join(map(g:autosync_exclude_opts, '"--exclude=\"" . v:val . "\""'), " ")
+
 
 " autocmdのパターンに変数が使えないから、仕方なく環境変数に突っ込む
 let $_AUTOSYNC_FILE_PATTERN = s:local_base_path . '*'
@@ -31,7 +33,7 @@ function! s:sync_with_server(src_path) abort
         echo s:msg_prefix . 'Syncing files with ' . s:remote_host . ' ...'
         let l:dest_path = substitute(a:src_path, s:local_base_path, s:remote_base_path, '')
         " FIXME: OS Command Injection
-        let l:sync_cmd = s:rsync . ' -av --delete --exclude="' . s:exclude_opt . '" ' . a:src_path . ' ' . s:remote_host . ':' . l:dest_path
+        let l:sync_cmd = s:rsync . ' -av --delete ' . s:exclude_opt . ' ' . a:src_path . ' ' . s:remote_host . ':' . l:dest_path
         echo l:sync_cmd
         echo system(l:sync_cmd)
     else
